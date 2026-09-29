@@ -1,20 +1,78 @@
 # Marketplace Multi-Vendeurs
 
-Projet de fin de cours - UE Framework Backend en JavaScript (INFO-321)
-Ecole Superieure des Technologies de l'Information (ESTI) - L2-IDEV
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-4.x-000000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-7.x-47A248?logo=mongodb&logoColor=white)
+![JWT](https://img.shields.io/badge/Auth-JWT-F7B93E?logo=jsonwebtokens&logoColor=black)
+![Jest](https://img.shields.io/badge/Tests-Jest-C21325?logo=jest&logoColor=white)
+![Swagger](https://img.shields.io/badge/Docs-Swagger-85EA2D?logo=swagger&logoColor=black)
 
-## Presentation
+> Projet de fin de cours - UE Framework Backend en JavaScript (INFO-321)
+> Ecole Superieure des Technologies de l'Information (ESTI) - L2-IDEV
 
-API REST d'une marketplace multi-vendeurs avec un frontend HTML/CSS/JS simple.
-Les vendeurs publient des produits, les clients les consultent, remplissent un panier
-(sauvegarde en base) et passent des commandes.
+API REST d'une marketplace multi-vendeurs avec frontend HTML/CSS/JS.
+Les vendeurs publient des produits, les clients les consultent,
+remplissent un panier persistant et passent des commandes.
 
-- Deux types de comptes separes : **vendeur** et **client**
-- CRUD complet des produits (chaque vendeur gere uniquement ses produits)
-- Panier persistant et historique des commandes par client
-- Authentification par JWT, mots de passe haches, routes protegees par role
+---
 
-## Technologies utilisees
+## Apercu de l'application
+
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Page d'accueil</strong><br/><br/>
+      Point d'entree de la marketplace. Navigation adaptee selon le role
+      de l'utilisateur connecte (vendeur ou client).
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/accueil.png" alt="Page d'accueil" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/vendeur.png" alt="Espace vendeur" width="100%"/>
+    </td>
+    <td width="50%">
+      <strong>Espace vendeur</strong><br/><br/>
+      Chaque vendeur gere uniquement ses propres produits.
+      Creation, modification et suppression depuis une interface dediee.
+    </td>
+  </tr>
+</table>
+
+---
+
+## Documentation interactive de l'API
+
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Swagger UI sur <code>/api-docs</code></strong><br/><br/>
+      Interface complete pour explorer et tester toutes les routes.
+      Les routes protegees sont marquees d'un cadenas.
+      Le bouton <em>Authorize</em> permet de coller le token JWT.
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/swagger.png" alt="Swagger UI" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/swagger-test.png" alt="Test Swagger" width="100%"/>
+    </td>
+    <td width="50%">
+      <strong>Test d'une route en direct</strong><br/><br/>
+      Chaque route peut etre testee directement dans le navigateur.
+      La reponse JSON est affichee avec le code HTTP, les headers
+      et la commande curl equivalente.
+    </td>
+  </tr>
+</table>
+
+---
+
+## Technologies
 
 | Outil | Role |
 |-------|------|
@@ -22,15 +80,30 @@ Les vendeurs publient des produits, les clients les consultent, remplissent un p
 | MongoDB + Mongoose | Base de donnees et modeles |
 | JWT (jsonwebtoken) | Authentification |
 | bcryptjs | Hachage des mots de passe |
-| Jest + Supertest | Tests unitaires et tests d'integration |
+| Jest + Supertest | Tests unitaires et integration |
+| Swagger UI | Documentation interactive de l'API |
 | HTML / CSS / JS natif | Frontend |
+
+---
+
+## Fonctionnalites
+
+- Deux types de comptes separes : **vendeur** et **client**
+- CRUD complet des produits (chaque vendeur gere uniquement ses produits)
+- Panier persistant en base de donnees (conserve meme apres deconnexion)
+- Historique complet des commandes par client
+- Authentification JWT avec mots de passe haches (bcrypt)
+- Routes protegees par role
+- Protection contre les commandes simultanees au niveau base de donnees
+
+---
 
 ## Installation et lancement
 
 ### 1. Prerequis
 
-- Node.js 18 ou plus (verifier avec `node -v`)
-- Une base MongoDB (voir l'etape 3, trois choix possibles)
+- Node.js 18 ou plus (`node -v` pour verifier)
+- Une base MongoDB (trois options ci-dessous)
 
 ### 2. Installer le projet
 
@@ -38,46 +111,40 @@ Les vendeurs publient des produits, les clients les consultent, remplissent un p
 git clone <lien-du-depot>
 cd marketplace
 npm install
-```
-
-Creer le fichier de configuration (il contient la cle secrete JWT) :
-
-```bash
 cp .env.example .env
 ```
 
-Sous Windows (invite de commandes) : `copy .env.example .env`
+Sous Windows : `copy .env.example .env`
 
-Le fichier `.env.example` fonctionne tel quel pour un MongoDB local ou Docker.
-Vous pouvez changer `JWT_SECRET` par la phrase de votre choix.
+### 3. Choisir une option MongoDB
 
-### 3. Avoir une base MongoDB (choisir UNE option)
+**Option A - MongoDB installe sur la machine (recommande)**
 
-**Option A - Docker (le plus simple si Docker est installe)**
+```bash
+sudo systemctl start mongod
+```
+
+Garder `MONGO_URI` par defaut dans `.env`.
+
+**Option B - Docker**
 
 ```bash
 npm run db:up
 ```
 
-**Option B - MongoDB Atlas (gratuit, sans rien installer)**
+**Option C - MongoDB Atlas (gratuit, sans rien installer)**
 
-1. Creer un compte et un cluster gratuit sur https://www.mongodb.com/atlas
-2. Dans "Database Access", creer un utilisateur avec un mot de passe (sans caracteres speciaux, c'est plus simple)
-3. Dans "Network Access", autoriser votre adresse IP (ou `0.0.0.0/0` pour un test)
-4. Cliquer sur "Connect" puis "Drivers" et copier le lien `mongodb+srv://...`
-5. Le coller dans `.env` a la place de `MONGO_URI` (ajouter le nom de la base, par exemple `/marketplace`, avant le `?`)
+1. Creer un compte sur https://www.mongodb.com/atlas
+2. Creer un cluster gratuit et un utilisateur
+3. Copier le lien `mongodb+srv://...` dans `.env` a la place de `MONGO_URI`
 
-**Option C - MongoDB installe sur la machine**
-
-Installer MongoDB Community Server, le lancer (service `mongod`), puis garder `MONGO_URI` par defaut.
-
-### 4. Inserer des donnees de test
+### 4. Inserer les donnees de test
 
 ```bash
 npm run seed
 ```
 
-Attention : cette commande **vide** la base avant d'inserer les donnees de test.
+Cette commande vide la base puis insere les donnees de test.
 
 ### 5. Demarrer le serveur
 
@@ -87,26 +154,17 @@ npm start
 
 Ouvrir http://localhost:5000 dans le navigateur.
 
-### Comptes de test (apres le seed)
+---
 
-| Role    | Email             | Mot de passe |
-|---------|-------------------|--------------|
-| Vendeur | rakoto@vendeur.mg | password123  |
-| Vendeur | rasoa@vendeur.mg  | password123  |
-| Client  | tiana@client.mg   | password123  |
+## Comptes de test
 
+| Role | Email | Mot de passe |
+|------|-------|--------------|
+| Vendeur | rakoto@vendeur.mg | password123 |
+| Vendeur | rasoa@vendeur.mg | password123 |
+| Client | tiana@client.mg | password123 |
 
-## Documentation interactive de l API (Swagger)
-
-Une interface Swagger est disponible pour tester toutes les routes directement dans le navigateur.
-
-Demarrer le serveur puis ouvrir : http://localhost:5000/api-docs
-
-Pour tester les routes protegees :
-1. Utiliser POST /api/auth/connexion pour obtenir un token
-2. Cliquer sur le bouton Authorize en haut a droite de la page Swagger
-3. Coller le token dans le champ (sans le mot Bearer)
-4. Toutes les routes avec un cadenas sont maintenant accessibles
+---
 
 ## Lancer les tests
 
@@ -114,24 +172,38 @@ Pour tester les routes protegees :
 npm test
 ```
 
-Cette commande lance :
+Lance en une seule commande :
 
-- **Les tests unitaires** (`tests/unit`) : chaque service est teste seul, sans base de donnees.
-- **Les tests d'integration de l'API** (`tests/integration/api.test.js`) : de vraies requetes HTTP
-  passent par les routes, les roles et la gestion des erreurs (sans base de donnees).
-- **Le test de parcours complet** (`tests/integration/parcours.test.js`) : un scenario complet
-  (inscription, produit, panier, commande, commandes simultanees) avec une vraie base.
-  Il est **ignore** tant que `MONGO_URI_TEST` n'est pas defini.
+- **Tests unitaires** (`tests/unit`) : chaque service est teste seul, sans base de donnees
+- **Tests d'integration** (`tests/integration/api.test.js`) : requetes HTTP reelles sur les routes
 
-Pour activer le parcours complet, decommenter `MONGO_URI_TEST` dans `.env` :
+Pour activer le test de parcours complet, ajouter dans `.env` :
 
 ```
 MONGO_URI_TEST=mongodb://127.0.0.1:27017/marketplace_test
 ```
 
-Cette base doit etre differente de la base normale : elle est videe a chaque lancement.
+Autres commandes disponibles :
 
-Autres commandes : `npm run test:unit`, `npm run test:integration`.
+```bash
+npm run test:unit          # tests unitaires uniquement
+npm run test:integration   # tests d'integration uniquement
+```
+
+---
+
+## Documentation Swagger
+
+Demarrer le serveur puis ouvrir : http://localhost:5000/api-docs
+
+Pour tester les routes protegees :
+
+1. Utiliser `POST /api/auth/connexion` pour obtenir un token
+2. Cliquer sur **Authorize** en haut a droite
+3. Coller le token (sans le mot `Bearer`)
+4. Toutes les routes avec un cadenas sont maintenant accessibles
+
+---
 
 ## Architecture du projet
 
@@ -141,26 +213,28 @@ marketplace/
   docker-compose.yml            MongoDB en une commande
   .env.example                  Modele du fichier de configuration
   src/
-    config.js                   Chargement du .env et valeurs par defaut
+    config.js                   Chargement du .env et validation des variables
     database.js                 Connexion MongoDB
-    routes.js                   Toutes les routes API
+    routes.js                   Toutes les routes API avec documentation Swagger
+    swagger.js                  Configuration Swagger UI
     model/                      Schemas Mongoose (User, Product, Cart, Order)
     repository/                 Acces aux donnees (seule couche qui parle a MongoDB)
     service/                    Logique metier (validation, stock, regles)
     controller/                 Gestion des requetes HTTP
     middleware/
       auth.js                   Verification du JWT et des roles
-      errorHandler.js           Gestion globale des erreurs (codes HTTP)
-    utils/                      Petites fonctions partagees
+      errorHandler.js           Gestion globale des erreurs
+    utils/
+      creerErreur.js            Creation d'erreurs avec code HTTP
+      idDe.js                   Comparaison fiable des identifiants MongoDB
     seed.js                     Donnees de test
   public/                       Frontend HTML/CSS/JS
   tests/
     unit/                       Tests unitaires Jest
-    integration/                Tests d'integration (Supertest)
+    integration/                Tests d'integration Supertest
 ```
 
-Le code suit l'organisation en trois couches vue en cours : le controller gere le HTTP,
-le service contient la logique metier, le repository est la seule couche qui accede a la base.
+---
 
 ## Routes de l'API
 
@@ -168,57 +242,57 @@ Toutes les routes commencent par `/api`.
 
 ### Authentification
 
-| Methode | Route                 | Acces    | Description              |
-|---------|-----------------------|----------|--------------------------|
-| POST    | /api/auth/inscription | Public   | Creer un compte          |
-| POST    | /api/auth/connexion   | Public   | Se connecter (token JWT) |
-| GET     | /api/auth/moi         | Connecte | Infos du compte          |
-
-Le token se donne ensuite dans l'en-tete `Authorization: Bearer <token>`.
+| Methode | Route | Acces | Description |
+|---------|-------|-------|-------------|
+| POST | /api/auth/inscription | Public | Creer un compte |
+| POST | /api/auth/connexion | Public | Se connecter (token JWT) |
+| GET | /api/auth/moi | Connecte | Infos du compte |
 
 ### Produits
 
-| Methode | Route             | Acces   | Description                                              |
-|---------|-------------------|---------|----------------------------------------------------------|
-| GET     | /api/produits     | Public  | Liste (`?page=1&limit=10&categorie=...&vendeurId=...`)   |
-| GET     | /api/produits/:id | Public  | Detail d'un produit                                      |
-| POST    | /api/produits     | Vendeur | Creer un produit                                         |
-| PUT     | /api/produits/:id | Vendeur | Modifier son produit                                     |
-| DELETE  | /api/produits/:id | Vendeur | Supprimer son produit                                    |
+| Methode | Route | Acces | Description |
+|---------|-------|-------|-------------|
+| GET | /api/produits | Public | Liste avec pagination et filtres |
+| GET | /api/produits/:id | Public | Detail d'un produit |
+| POST | /api/produits | Vendeur | Creer un produit |
+| PUT | /api/produits/:id | Vendeur | Modifier son produit |
+| DELETE | /api/produits/:id | Vendeur | Supprimer son produit |
 
-### Panier (clients uniquement)
+### Panier
 
-| Methode | Route                              | Description                             |
-|---------|------------------------------------|-----------------------------------------|
-| GET     | /api/panier                        | Voir son panier                         |
-| POST    | /api/panier/articles               | Ajouter un article (`produitId`, `quantite`) |
-| DELETE  | /api/panier/articles/:produitId    | Retirer un article                      |
-| DELETE  | /api/panier                        | Vider le panier                         |
+| Methode | Route | Acces | Description |
+|---------|-------|-------|-------------|
+| GET | /api/panier | Client | Voir son panier |
+| POST | /api/panier/articles | Client | Ajouter un article |
+| DELETE | /api/panier/articles/:produitId | Client | Retirer un article |
+| DELETE | /api/panier | Client | Vider le panier |
 
-### Commandes (clients uniquement)
+### Commandes
 
-| Methode | Route              | Description                      |
-|---------|--------------------|----------------------------------|
-| POST    | /api/commandes     | Passer commande depuis le panier |
-| GET     | /api/commandes     | Historique des commandes         |
-| GET     | /api/commandes/:id | Detail d'une commande            |
+| Methode | Route | Acces | Description |
+|---------|-------|-------|-------------|
+| POST | /api/commandes | Client | Passer commande depuis le panier |
+| GET | /api/commandes | Client | Historique des commandes |
+| GET | /api/commandes/:id | Client | Detail d'une commande |
 
 ### Codes de reponse
 
-| Code | Signification                                             |
-|------|-----------------------------------------------------------|
-| 200 / 201 / 204 | Succes (lecture / creation / suppression)      |
-| 400  | Donnees invalides (champ manquant, stock insuffisant...)  |
-| 401  | Token manquant, invalide ou identifiants incorrects       |
-| 403  | Action interdite (mauvais role ou produit d'un autre)     |
-| 404  | Ressource introuvable                                     |
-| 500  | Erreur inattendue du serveur                              |
+| Code | Signification |
+|------|---------------|
+| 200 / 201 / 204 | Succes (lecture / creation / suppression) |
+| 400 | Donnees invalides ou stock insuffisant |
+| 401 | Token manquant, invalide ou identifiants incorrects |
+| 403 | Action interdite (mauvais role ou ressource d'un autre) |
+| 404 | Ressource introuvable |
+| 500 | Erreur inattendue du serveur |
+
+---
 
 ## En cas de probleme
 
-| Message                                   | Solution                                                    |
-|-------------------------------------------|-------------------------------------------------------------|
-| `JWT_SECRET est manquant`                 | Creer le fichier `.env` (`cp .env.example .env`)            |
-| `Impossible de se connecter a MongoDB`    | Lancer MongoDB (`npm run db:up`) ou verifier `MONGO_URI`    |
-| `EADDRINUSE` (port deja utilise)          | Changer `PORT` dans `.env` (par exemple 5001)               |
-| Page blanche ou liste de produits vide    | Lancer `npm run seed` pour inserer des donnees              |
+| Message | Solution |
+|---------|----------|
+| `JWT_SECRET est manquant` | Creer le fichier `.env` (`cp .env.example .env`) |
+| `Impossible de se connecter a MongoDB` | Lancer MongoDB (`npm run db:up`) ou verifier `MONGO_URI` |
+| `EADDRINUSE` (port deja utilise) | Changer `PORT` dans `.env` (par exemple 5001) |
+| Page blanche ou liste de produits vide | Lancer `npm run seed` pour inserer des donnees |
