@@ -26,12 +26,12 @@ remplissent un panier persistant et passent des commandes.
       de l'utilisateur connecte (vendeur ou client).
     </td>
     <td width="50%">
-      <img src="docs/screenshots/accueil.png" alt="Page d'accueil" width="100%"/>
+      <img src="docs/screenshots/cap1.png" alt="Page d'accueil" width="100%"/>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <img src="docs/screenshots/vendeur.png" alt="Espace vendeur" width="100%"/>
+      <img src="docs/screenshots/cap2.png" alt="Espace vendeur" width="100%"/>
     </td>
     <td width="50%">
       <strong>Espace vendeur</strong><br/><br/>
@@ -54,12 +54,12 @@ remplissent un panier persistant et passent des commandes.
       Le bouton <em>Authorize</em> permet de coller le token JWT.
     </td>
     <td width="50%">
-      <img src="docs/screenshots/swagger.png" alt="Swagger UI" width="100%"/>
+      <img src="docs/screenshots/cap3.png" alt="Swagger UI" width="100%"/>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <img src="docs/screenshots/swagger-test.png" alt="Test Swagger" width="100%"/>
+      <img src="docs/screenshots/cap4.png" alt="Test Swagger" width="100%"/>
     </td>
     <td width="50%">
       <strong>Test d'une route en direct</strong><br/><br/>
