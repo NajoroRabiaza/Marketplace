@@ -1,10 +1,22 @@
-// Ce fichier charge le fichier .env et donne des valeurs par defaut
-// pour que le projet demarre facilement sur n'importe quelle machine.
+// src/config.js
+// Charge les variables d'environnement et verifie les valeurs obligatoires
 require('dotenv').config();
 
-process.env.PORT = process.env.PORT || '5000';
-process.env.MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/marketplace';
-process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d';
+// On arrete le serveur immediatement si une variable critique est absente
+if (!process.env.JWT_SECRET) {
+    console.error('ERREUR : JWT_SECRET est manquant dans le fichier .env');
+    process.exit(1);
+}
 
-// Remarque : JWT_SECRET n'a pas de valeur par defaut, c'est une cle secrete.
-// Elle doit venir du fichier .env (voir .env.example).
+if (!process.env.MONGO_URI) {
+    console.error('ERREUR : MONGO_URI est manquant dans le fichier .env');
+    process.exit(1);
+}
+
+// On exporte les valeurs pour les utiliser partout dans le projet
+module.exports = {
+    port: process.env.PORT || 5000,
+    mongoUri: process.env.MONGO_URI,
+    jwtSecret: process.env.JWT_SECRET,
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d'
+};
