@@ -11,6 +11,12 @@ const app = express();
 // Middleware pour lire le JSON dans les requetes
 app.use(express.json());
 
+
+// Interface Swagger disponible sur http://localhost:5000/api-docs
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./src/swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Sert les fichiers statiques du frontend (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
 

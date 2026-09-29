@@ -95,6 +95,19 @@ Ouvrir http://localhost:5000 dans le navigateur.
 | Vendeur | rasoa@vendeur.mg  | password123  |
 | Client  | tiana@client.mg   | password123  |
 
+
+## Documentation interactive de l API (Swagger)
+
+Une interface Swagger est disponible pour tester toutes les routes directement dans le navigateur.
+
+Demarrer le serveur puis ouvrir : http://localhost:5000/api-docs
+
+Pour tester les routes protegees :
+1. Utiliser POST /api/auth/connexion pour obtenir un token
+2. Cliquer sur le bouton Authorize en haut a droite de la page Swagger
+3. Coller le token dans le champ (sans le mot Bearer)
+4. Toutes les routes avec un cadenas sont maintenant accessibles
+
 ## Lancer les tests
 
 ```bash
