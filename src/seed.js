@@ -1,4 +1,4 @@
-require('./config');
+require('dotenv').config();
 const { connectDB, disconnectDB } = require('./database');
 const User = require('./model/User');
 const Product = require('./model/Product');
