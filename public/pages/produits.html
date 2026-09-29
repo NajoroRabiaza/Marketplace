@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Produits - Marketplace MG</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">Marketplace MG</a>
+        <div class="nav-links" id="nav-links"></div>
+    </nav>
+
+    <div class="container">
+        <h2>Tous les produits</h2>
+
+        <!-- Filtres de recherche -->
+        <div class="filtres">
+            <input type="text" id="filtreCategorie" placeholder="Filtrer par categorie">
+            <button class="btn btn-primary" onclick="chargerProduits()">Filtrer</button>
+            <button class="btn" onclick="resetFiltres()" style="background:#eee;">Tout afficher</button>
+        </div>
+
+        <div id="message" class="message" style="display:none;"></div>
+        <div id="liste-produits" class="produits-grid"></div>
+
+        <!-- Boutons de pagination -->
+        <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+            <button id="btn-precedent" class="btn btn-primary" onclick="pagePrecedente()" disabled>Precedent</button>
+            <span id="info-page" style="padding:8px 12px;"></span>
+            <button id="btn-suivant" class="btn btn-primary" onclick="pageSuivante()">Suivant</button>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        mettreAJourNav();
+
+        let pageCourante = 1;
+        const LIMIT = 8;
+
+        async function chargerProduits() {
+            const categorie = document.getElementById('filtreCategorie').value.trim();
+            let chemin = `/produits?page=${pageCourante}&limit=${LIMIT}`;
+            if (categorie) chemin += `&categorie=${encodeURIComponent(categorie)}`;
+
+            try {
+                const data = await appelAPI('GET', chemin);
+                afficherProduits(data.produits);
+
+                const totalPages = Math.ceil(data.total / LIMIT);
+                document.getElementById('info-page').textContent = `Page ${pageCourante} / ${totalPages || 1}`;
+                document.getElementById('btn-precedent').disabled = pageCourante <= 1;
+                document.getElementById('btn-suivant').disabled = pageCourante >= totalPages;
+            } catch (err) {
+                afficherMessage('message', 'Impossible de charger les produits : ' + err.message);
+            }
+        }
+
+        function afficherProduits(produits) {
+            const conteneur = document.getElementById('liste-produits');
+            if (produits.length === 0) {
+                conteneur.innerHTML = '<p style="color:#777;">Aucun produit trouve.</p>';
+                return;
+            }
+
+            const user = getUser();
+            conteneur.innerHTML = produits.map(p => `
+                <div class="produit-card">
+                    <h3>${echapper(p.nom)}</h3>
+                    <p style="font-size:12px; color:#777; margin-bottom:6px;">${echapper(p.categorie)}</p>
+                    <p style="font-size:13px; margin-bottom:8px;">${echapper(p.description)}</p>
+                    <p class="prix">${formaterPrix(p.prix)}</p>
+                    <p class="stock">Stock : ${p.stock} disponibles</p>
+                    <p style="font-size:12px; color:#999; margin-bottom:10px;">
+                        Vendeur : ${p.vendeurId ? echapper(p.vendeurId.nom) : 'Inconnu'}
+                    </p>
+                    ${user && user.role === 'client' && p.stock > 0 ? `
+                        <button class="btn btn-primary" style="width:100%;"
+                            onclick="ajouterAuPanier('${echapper(p._id)}')">
+                            Ajouter au panier
+                        </button>
+                    ` : ''}
+                    ${!user ? `<a href="/pages/connexion.html" class="btn btn-primary" style="display:block;text-align:center;text-decoration:none;">Connexion pour acheter</a>` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function ajouterAuPanier(produitId) {
+            try {
+                await appelAPI('POST', '/panier/articles', { produitId, quantite: 1 });
+                afficherMessage('message', 'Produit ajoute au panier !', 'succes');
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        function resetFiltres() {
+            document.getElementById('filtreCategorie').value = '';
+            pageCourante = 1;
+            chargerProduits();
+        }
+
+        function pagePrecedente() {
+            if (pageCourante > 1) { pageCourante--; chargerProduits(); }
+        }
+
+        function pageSuivante() {
+            pageCourante++;
+            chargerProduits();
+        }
+
+        // Chargement initial
+        chargerProduits();
+    </script>
+</body>
+</html>

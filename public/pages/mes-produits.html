@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Produits - Marketplace MG</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">Marketplace MG</a>
+        <div class="nav-links" id="nav-links"></div>
+    </nav>
+
+    <div class="container">
+        <h2>Mes produits</h2>
+        <div id="message" class="message" style="display:none;"></div>
+
+        <!-- Formulaire pour ajouter un produit -->
+        <div style="background:white; border:1px solid #ddd; border-radius:6px; padding:20px; margin-bottom:24px;">
+            <h3 style="margin-bottom:14px;">Ajouter un nouveau produit</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                    <label>Nom du produit</label>
+                    <input type="text" id="nom" placeholder="Ex: Telephone Samsung">
+                </div>
+                <div class="form-group">
+                    <label>Categorie</label>
+                    <input type="text" id="categorie" placeholder="Ex: Electronique">
+                </div>
+                <div class="form-group">
+                    <label>Prix (Ar)</label>
+                    <input type="number" id="prix" placeholder="Ex: 350000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" id="stock" placeholder="Ex: 20" min="0">
+                </div>
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label>Description</label>
+                    <textarea id="description" rows="2" placeholder="Description du produit"></textarea>
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="ajouterProduit()">Ajouter le produit</button>
+        </div>
+
+        <!-- Liste des produits du vendeur -->
+        <h3 style="margin-bottom:12px;">Mes produits en vente</h3>
+        <div id="liste-produits"></div>
+    </div>
+
+    <!-- Modal de modification -->
+    <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+         background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center;">
+        <div style="background:white; padding:24px; border-radius:6px; width:400px;">
+            <h3 style="margin-bottom:14px;">Modifier le produit</h3>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" id="edit-nom">
+            </div>
+            <div class="form-group">
+                <label>Prix (Ar)</label>
+                <input type="number" id="edit-prix">
+            </div>
+            <div class="form-group">
+                <label>Stock</label>
+                <input type="number" id="edit-stock">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="edit-description" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn" onclick="fermerModal()" style="background:#eee;">Annuler</button>
+                <button class="btn btn-primary" onclick="sauvegarderModification()">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Cette page est reservee aux vendeurs
+        exigerConnexion('vendeur');
+        mettreAJourNav();
+
+        // On garde la liste en memoire pour pouvoir remplir le formulaire de modification
+        let produitsCharges = [];
+
+        async function chargerMesProduits() {
+            try {
+                // Le serveur ne renvoie que les produits de ce vendeur
+                const user = getUser();
+                const data = await appelAPI('GET', '/produits?limit=100&vendeurId=' + user.id);
+                produitsCharges = data.produits;
+                afficherProduits(produitsCharges);
+            } catch (err) {
+                afficherMessage('message', 'Erreur : ' + err.message);
+            }
+        }
+
+        function afficherProduits(produits) {
+            const conteneur = document.getElementById('liste-produits');
+            if (produits.length === 0) {
+                conteneur.innerHTML = '<p style="color:#777;">Vous n\'avez pas encore de produits.</p>';
+                return;
+            }
+            conteneur.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Categorie</th>
+                            <th>Prix</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${produits.map(p => `
+                            <tr>
+                                <td>${echapper(p.nom)}</td>
+                                <td>${echapper(p.categorie)}</td>
+                                <td>${formaterPrix(p.prix)}</td>
+                                <td>${p.stock}</td>
+                                <td>
+                                    <button class="btn btn-primary" style="margin-right:6px;"
+                                        onclick="ouvrirModal('${echapper(p._id)}')">
+                                        Modifier
+                                    </button>
+                                    <button class="btn btn-danger"
+                                        onclick="supprimerProduit('${echapper(p._id)}')">
+                                        Supprimer
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function ajouterProduit() {
+            const corps = {
+                nom: document.getElementById('nom').value.trim(),
+                categorie: document.getElementById('categorie').value.trim(),
+                prix: Number(document.getElementById('prix').value),
+                stock: Number(document.getElementById('stock').value),
+                description: document.getElementById('description').value.trim()
+            };
+
+            if (!corps.nom || !corps.categorie || !corps.prix || !corps.description) {
+                afficherMessage('message', 'Tous les champs sont obligatoires');
+                return;
+            }
+
+            try {
+                await appelAPI('POST', '/produits', corps);
+                afficherMessage('message', 'Produit ajoute avec succes !', 'succes');
+                // On vide le formulaire
+                ['nom', 'categorie', 'prix', 'stock', 'description'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                chargerMesProduits();
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        function ouvrirModal(id) {
+            // On retrouve le produit dans la liste chargee
+            const p = produitsCharges.find(produit => produit._id === id);
+            if (!p) return;
+            document.getElementById('edit-id').value = p._id;
+            document.getElementById('edit-nom').value = p.nom;
+            document.getElementById('edit-prix').value = p.prix;
+            document.getElementById('edit-stock').value = p.stock;
+            document.getElementById('edit-description').value = p.description;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function fermerModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        async function sauvegarderModification() {
+            const id = document.getElementById('edit-id').value;
+            const corps = {
+                nom: document.getElementById('edit-nom').value,
+                prix: Number(document.getElementById('edit-prix').value),
+                stock: Number(document.getElementById('edit-stock').value),
+                description: document.getElementById('edit-description').value
+            };
+
+            try {
+                await appelAPI('PUT', '/produits/' + id, corps);
+                afficherMessage('message', 'Produit modifie avec succes !', 'succes');
+                fermerModal();
+                chargerMesProduits();
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        async function supprimerProduit(id) {
+            if (!confirm('Voulez-vous vraiment supprimer ce produit ?')) return;
+
+            try {
+                // DELETE renvoie 204 sans contenu, appelAPI gere ce cas
+                await appelAPI('DELETE', '/produits/' + id);
+                afficherMessage('message', 'Produit supprime', 'succes');
+                chargerMesProduits();
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        chargerMesProduits();
+    </script>
+</body>
+</html>

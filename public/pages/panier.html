@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Panier - Marketplace MG</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">Marketplace MG</a>
+        <div class="nav-links" id="nav-links"></div>
+    </nav>
+
+    <div class="container" style="max-width:640px;">
+        <h2>Mon panier</h2>
+        <div id="message" class="message" style="display:none;"></div>
+        <div id="contenu-panier"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Cette page est reservee aux clients
+        exigerConnexion('client');
+        mettreAJourNav();
+
+        async function chargerPanier() {
+            try {
+                const panier = await appelAPI('GET', '/panier');
+                afficherPanier(panier);
+            } catch (err) {
+                afficherMessage('message', 'Erreur : ' + err.message);
+            }
+        }
+
+        function afficherPanier(panier) {
+            const conteneur = document.getElementById('contenu-panier');
+
+            if (!panier.articles || panier.articles.length === 0) {
+                conteneur.innerHTML = `
+                    <p style="color:#777; margin-bottom:16px;">Votre panier est vide.</p>
+                    <a href="/pages/produits.html" class="btn btn-primary">Voir les produits</a>
+                `;
+                return;
+            }
+
+            // Calcul du total
+            const total = panier.articles.reduce(
+                (s, a) => s + a.prixUnitaire * a.quantite, 0
+            );
+
+            const articlesHtml = panier.articles.map(a => {
+                const nom = a.produitId ? echapper(a.produitId.nom) : 'Produit inconnu';
+                const idProduit = a.produitId ? echapper(a.produitId._id) : '';
+                return `
+                    <div class="panier-item">
+                        <div>
+                            <strong>${nom}</strong><br>
+                            <span style="font-size:13px; color:#777;">
+                                ${formaterPrix(a.prixUnitaire)} x ${a.quantite}
+                            </span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <strong>${formaterPrix(a.prixUnitaire * a.quantite)}</strong>
+                            <button class="btn btn-danger" style="padding:4px 10px;"
+                                onclick="retirerArticle('${idProduit}')">
+                                Retirer
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            conteneur.innerHTML = `
+                ${articlesHtml}
+                <div class="panier-total">Total : ${formaterPrix(total)}</div>
+                <div style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button class="btn btn-danger" onclick="viderPanier()">Vider le panier</button>
+                    <button class="btn btn-success" onclick="passerCommande()">Commander</button>
+                </div>
+            `;
+        }
+
+        async function retirerArticle(produitId) {
+            try {
+                // appelAPI affiche aussi les erreurs renvoyees par le serveur
+                await appelAPI('DELETE', '/panier/articles/' + produitId);
+                chargerPanier();
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        async function viderPanier() {
+            if (!confirm('Vider entierement le panier ?')) return;
+            try {
+                await appelAPI('DELETE', '/panier');
+                chargerPanier();
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        async function passerCommande() {
+            if (!confirm('Confirmer la commande ?')) return;
+            try {
+                await appelAPI('POST', '/commandes');
+                afficherMessage('message', 'Commande passee avec succes !', 'succes');
+                setTimeout(() => {
+                    window.location.href = '/pages/commandes.html';
+                }, 1500);
+            } catch (err) {
+                afficherMessage('message', err.message);
+            }
+        }
+
+        chargerPanier();
+    </script>
+</body>
+</html>
